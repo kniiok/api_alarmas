@@ -1,0 +1,61 @@
+version: "3.8"
+volumes:
+
+  vol-emqx-data:
+    name: foo-emqx-data
+  vol-emqx-etc:
+    name: foo-emqx-etc
+  vol-emqx-log:
+    name: foo-emqx-log
+
+services:
+  emqx:
+      container_name: emqx
+      image: emqx/emqx:5.1.6
+      restart: always
+      ports:
+        - 18083:18083
+        - 8083:8083
+        - 18084:18084
+        - 8084:8084
+        - 1883:1883
+        - 8085:8081
+        - 8883:8883
+
+      volumes:
+        - vol-emqx-data:/opt/emqx/data
+        - vol-emqx-etc:/opt/emqx/etc
+        - vol-emqx-log:/opt/emqx/log
+
+      extra_hosts:
+        - "localhost:10.15.3.159"
+
+      environment:
+
+        EMQX_NAME: foo_emqx
+        EMQX_HOST: 127.0.0.1
+
+        TZ: "America/Argentina/ComodRivadavia"
+        EMQX_LISTENER_TCPEXTERNAL_MAX_CONNECTIONS: 1000
+        EMQX_ALLOW_ANONYMOUS: "true"
+        EMQX_NOMATCH: "deny"
+        EMQX_LOADED_PLUGINS: "emqx_recon,emqx_retainer,emqx_management,emqx_dashboard"
+    
+  mongo:
+    image: mongo
+    restart: always
+    ports:
+      - 27017:27017
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: sistemas_distribuidos
+      MONGO_INITDB_ROOT_PASSWORD: j2CTTKqbZaNyQqsd
+    volumes:
+      - './data:/data/db'
+  api:
+    build:
+      context: /
+      dockerfile: Dockerfile
+    environment:
+      NODE_ENV: production
+    ports:
+      - 3000:3000
